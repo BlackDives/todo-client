@@ -1,5 +1,11 @@
 import React from "react"
 import DashboardSearch from "./DashboardSearch"
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+} from "@/components/ui/dialog"
 
 type DashboardCardProps = {
 	title: string
@@ -52,6 +58,7 @@ export default function Dashboard() {
 					<button className='bg-primary-500 mt-2 p-3 rounded text-primary-100 w-60 hover:bg-primary-400 font-bold'>
 						CREATE
 					</button>
+					<Dialog></Dialog>
 				</div>
 				<div className='flex flex-col space'>
 					<div className='mb-4'>

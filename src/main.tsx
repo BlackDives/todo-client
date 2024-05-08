@@ -1,6 +1,8 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
+import { ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 import App from "./App.tsx"
 import Login from "./components/login/Login.tsx"
 import Register from "./components/signup/Register.tsx"
@@ -10,7 +12,12 @@ import "./index.css"
 const router = createBrowserRouter([
 	{
 		path: "/",
-		element: <App />,
+		element: (
+			<>
+				<App />
+				<ToastContainer />
+			</>
+		),
 		errorElement: <div>Page Not Found</div>,
 		children: [{ path: "dashboard", element: <Dashboard /> }],
 	},
