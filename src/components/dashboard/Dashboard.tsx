@@ -1,4 +1,5 @@
-import React from "react"
+import React, { useEffect } from "react"
+import { useAuth } from "@/Context/useAuth"
 import DashboardSearch from "./DashboardSearch"
 import {
 	Dialog,
@@ -6,6 +7,7 @@ import {
 	DialogDescription,
 	DialogHeader,
 } from "@/components/ui/dialog"
+import { useNavigate } from "react-router-dom"
 
 type DashboardCardProps = {
 	title: string
@@ -48,6 +50,14 @@ const taskCards = [
 ]
 
 export default function Dashboard() {
+	const { isLoggedIn } = useAuth()
+	const navigate = useNavigate()
+
+	useEffect(() => {
+		if (isLoggedIn() === false) {
+			navigate("/register")
+		}
+	}, [])
 	return (
 		<div className='flex flex-col bg-neutral-900 p-5 h-full overflow-y-auto'>
 			<div className='mb-4'>

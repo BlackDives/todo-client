@@ -15,15 +15,17 @@ const router = createBrowserRouter([
 		path: "/",
 		element: (
 			<>
-				<App />
-				<ToastContainer />
+				<UserProvider>
+					<App />
+					<ToastContainer />
+				</UserProvider>
 			</>
 		),
 		errorElement: <div>Page Not Found</div>,
 		children: [{ path: "dashboard", element: <Dashboard /> }],
 	},
 	{
-		path: "/signup",
+		path: "/register",
 		element: <Register />,
 	},
 	{
@@ -34,8 +36,6 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
 	<React.StrictMode>
-		<UserProvider>
-			<RouterProvider router={router} />
-		</UserProvider>
+		<RouterProvider router={router} />
 	</React.StrictMode>
 )

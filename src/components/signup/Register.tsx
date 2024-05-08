@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect, LegacyRef } from "react"
+import { useNavigate } from "react-router-dom"
 import { faTimes } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 
