@@ -9,9 +9,8 @@ import {
 import { useAuth } from "@/Context/useAuth"
 
 const Links = [
-	{ id: 1, title: "Dashboard", href: "/dashboard", icon: faGrip },
-	{ id: 2, title: "Tasks", href: "/tasks", icon: faListCheck },
-	{ id: 1, title: "Analytics", href: "/analytics", icon: faMattressPillow },
+	{ id: 1, title: "Home", href: "/dashboard", icon: faGrip },
+	{ id: 2, title: "All Tasks", href: "/tasks", icon: faListCheck },
 ]
 
 export default function NavigationBar() {
@@ -19,20 +18,17 @@ export default function NavigationBar() {
 
 	console.log(user)
 	return (
-		<div className='bg-neutral-800 h-full w-full flex flex-col items-center'>
-			<div className='w-full flex flex-col items-center'>
-				<div className='text-neutral-50 text-4xl font-bold mb-10 mt-10 w-2/3'>
+		<div className='bg-neutral-900 h-full w-full flex flex-col items-center justify-between p-5'>
+			<div className='w-full flex flex-col items-center mt-10'>
+				<div className='text-neutral-50 text-2xl font-bold mb-10 w-full flex flex-col items-center'>
 					Flowsion
 				</div>
-				<div className='w-2/3'>
+				<div className='w-full flex flex-col items-center'>
 					<ul className='flex flex-col items-start'>
 						{Links.map((data) => (
 							<li className='mb-4' key={data.id}>
-								<FontAwesomeIcon
-									className='text-neutral-400'
-									icon={data.icon}
-								/>
-								<a className='text-neutral-400 text-2xl ml-2' href={data.href}>
+								<FontAwesomeIcon className='text-neutral-50' icon={data.icon} />
+								<a className='text-neutral-50 text-2xl ml-2' href={data.href}>
 									{data.title}
 								</a>
 							</li>
@@ -40,13 +36,12 @@ export default function NavigationBar() {
 					</ul>
 				</div>
 			</div>
-			<div>
-				<p>{user?.userName}</p>
-				<button
-					className='bg-secondary-600/10 border-secondary-500 border-2 mt-2 p-3 rounded text-secondary-500 w-60 hover:bg-secondary-500 hover:text-neutral-100'
-					onClick={() => logout()}
-				>
-					logout
+			<div className='w-full flex flex-col items-center mb-12'>
+				<div className='mb-5'>
+					<button className='text-neutral-50 text-2xl'>Settings</button>
+				</div>
+				<button className='text-neutral-50 bg-neutral-800 p-5 rounded 3xl:w-2/4 flex flex-col items-center w-3/4'>
+					{user?.userName}
 				</button>
 			</div>
 		</div>
