@@ -1,55 +1,34 @@
 import React, { useRef, useState, useEffect, LegacyRef } from "react"
+import * as Yup from "yup"
+import { yupResolver } from "@hookform/resolvers/yup"
+import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
 import { faTimes } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { useAuth } from "@/Context/useAuth"
 
-const USER_REGEX = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/
-const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/
+type LoginFormInputs = {
+	username: string
+	password: string
+}
+
+const validation = Yup.object().shape({
+	username: Yup.string().required("Username is required"),
+	password: Yup.string().required("Password is required"),
+})
 
 export default function Login() {
 	const navigate = useNavigate()
-	const userRef = useRef<HTMLInputElement>(null)
-	const errRef = useRef()
+	const { loginUser } = useAuth()
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+	} = useForm<LoginFormInputs>({ resolver: yupResolver(validation) })
 
-	const [user, setUser] = useState<string>("")
-	const [validName, setValidName] = useState<boolean>(false)
-	const [userFocus, setUserFocus] = useState<boolean>(false)
-
-	const [pwd, setPwd] = useState<string>("")
-	const [validPwd, setValidPwd] = useState<boolean>(false)
-	const [pwdFocus, setPwdFocus] = useState<boolean>(false)
-
-	const [matchPwd, setMatchPwd] = useState<string>("")
-	const [validMatch, setValidMatch] = useState<boolean>(false)
-	const [matchFocus, setMatchFocus] = useState<boolean>(false)
-
-	const [errMsg, setErrMsg] = useState<string>("")
-	const [success, setSuccess] = useState<boolean>(false)
-
-	useEffect(() => {
-		if (userRef.current === null) return
-		userRef.current.focus()
-	}, [])
-
-	useEffect(() => {
-		const result = USER_REGEX.test(user)
-		console.log(result)
-		console.log(user)
-		setValidName(result)
-	}, [user])
-
-	useEffect(() => {
-		const result = PWD_REGEX.test(pwd)
-		console.log(result)
-		console.log(pwd)
-		setValidPwd(result)
-		const match = pwd === matchPwd
-		setValidMatch(match)
-	}, [pwd, matchPwd])
-
-	useEffect(() => {
-		setErrMsg("")
-	}, [user, pwd, matchPwd])
+	const handleLogin = (form: LoginFormInputs) => {
+		loginUser(form.username, form.password)
+	}
 
 	return (
 		<div className='bg-neutral-900 flex flex-row w-screen h-screen'>
@@ -79,34 +58,36 @@ export default function Login() {
 							use your username and password to log in
 						</p>
 					</div>
-					<form className='flex flex-col w-1/3'>
+					<form
+						className='flex flex-col w-1/3'
+						onSubmit={handleSubmit(handleLogin)}
+					>
 						<input
 							className='my-2 p-3 rounded bg-neutral-800 placeholder:text-neutral-500 text-neutral-100 focus:bg-neutral-600 focus:outline-none'
 							type='text'
 							placeholder='username'
-							ref={userRef}
 							required
 							autoComplete='off'
-							aria-invalid={validName ? "false" : "true"}
-							aria-describedby='uidnote'
-							onChange={(e) => setUser(e.target.value)}
-							onFocus={() => setUserFocus(true)}
-							onBlur={() => setUserFocus(false)}
+							{...register("username")}
 						/>
+						{errors.username ? (
+							<p className='text-rose-700'>{errors.username.message}</p>
+						) : (
+							""
+						)}
 						<input
 							className='my-2 p-3 rounded bg-neutral-800 placeholder:text-neutral-500 text-neutral-100 focus:bg-neutral-600 focus:outline-none'
-							type='text'
+							type='password'
 							placeholder='password'
-							ref={userRef}
 							required
 							autoComplete='off'
-							aria-invalid={validName ? "false" : "true"}
-							aria-describedby='uidnote'
-							onChange={(e) => setUser(e.target.value)}
-							onFocus={() => setUserFocus(true)}
-							onBlur={() => setUserFocus(false)}
+							{...register("password")}
 						/>
-
+						{errors.password ? (
+							<p className='text-rose-700'>{errors.password.message}</p>
+						) : (
+							""
+						)}
 						<div className='flex flex-col items-center placeholder:text-neutral-500'>
 							<button className='bg-primary-500 mt-2 p-3 rounded text-primary-100 w-60 hover:bg-primary-400'>
 								LOGIN

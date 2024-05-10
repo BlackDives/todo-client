@@ -1,4 +1,7 @@
 import React, { useRef, useState, useEffect, LegacyRef } from "react"
+import * as Yup from "yup"
+import { yupResolver } from "@hookform/resolvers/yup"
+import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
 import { faTimes } from "@fortawesome/free-solid-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -7,49 +10,6 @@ const USER_REGEX = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/
 
 export default function Register() {
-	const userRef = useRef<HTMLInputElement>(null)
-	const errRef = useRef()
-
-	const [user, setUser] = useState<string>("")
-	const [validName, setValidName] = useState<boolean>(false)
-	const [userFocus, setUserFocus] = useState<boolean>(false)
-
-	const [pwd, setPwd] = useState<string>("")
-	const [validPwd, setValidPwd] = useState<boolean>(false)
-	const [pwdFocus, setPwdFocus] = useState<boolean>(false)
-
-	const [matchPwd, setMatchPwd] = useState<string>("")
-	const [validMatch, setValidMatch] = useState<boolean>(false)
-	const [matchFocus, setMatchFocus] = useState<boolean>(false)
-
-	const [errMsg, setErrMsg] = useState<string>("")
-	const [success, setSuccess] = useState<boolean>(false)
-
-	useEffect(() => {
-		if (userRef.current === null) return
-		userRef.current.focus()
-	}, [])
-
-	useEffect(() => {
-		const result = USER_REGEX.test(user)
-		console.log(result)
-		console.log(user)
-		setValidName(result)
-	}, [user])
-
-	useEffect(() => {
-		const result = PWD_REGEX.test(pwd)
-		console.log(result)
-		console.log(pwd)
-		setValidPwd(result)
-		const match = pwd === matchPwd
-		setValidMatch(match)
-	}, [pwd, matchPwd])
-
-	useEffect(() => {
-		setErrMsg("")
-	}, [user, pwd, matchPwd])
-
 	return (
 		<div className='bg-neutral-900 flex flex-row w-screen h-screen'>
 			<div className='bg-neutral-800 flex flex-col w-1/3 container mx-auto items-center justify-center'>
@@ -78,27 +38,12 @@ export default function Register() {
 							className='my-2 p-3 rounded bg-neutral-800 placeholder:text-neutral-500 text-neutral-100 focus:bg-neutral-600 focus:outline-none'
 							type='text'
 							placeholder='first name'
-							ref={userRef}
-							required
 							autoComplete='off'
-							aria-invalid={validName ? "false" : "true"}
-							aria-describedby='uidnote'
-							onChange={(e) => setUser(e.target.value)}
-							onFocus={() => setUserFocus(true)}
-							onBlur={() => setUserFocus(false)}
 						/>
 						<input
 							className='my-2 p-3 rounded bg-neutral-800 placeholder:text-neutral-500 text-neutral-100 focus:bg-neutral-600 focus:outline-none'
 							type='text'
 							placeholder='last name'
-							ref={userRef}
-							required
-							autoComplete='off'
-							aria-invalid={validName ? "false" : "true"}
-							aria-describedby='uidnote'
-							onChange={(e) => setUser(e.target.value)}
-							onFocus={() => setUserFocus(true)}
-							onBlur={() => setUserFocus(false)}
 						/>
 						<input
 							className='my-2 p-3 rounded bg-neutral-800 placeholder:text-neutral-500 text-neutral-100 focus:bg-neutral-600 focus:outline-none'

@@ -8,8 +8,8 @@ import { registerAPI, loginAPI } from "@/Services/AuthService"
 type UserContextType = {
 	user: UserProfile | null
 	token: string | null
-	registerUser: (email: string, username: string, password: string) => void
-	loginUser: (username: string, password: string) => void
+	registerUser: (email: string, userName: string, password: string) => void
+	loginUser: (userName: string, password: string) => void
 	logout: () => void
 	isLoggedIn: () => boolean
 }
@@ -38,15 +38,15 @@ export const UserProvider = ({ children }: Props) => {
 
 	const registerUser = async (
 		email: string,
-		username: string,
+		userName: string,
 		password: string
 	) => {
-		await registerAPI(email, username, password)
+		await registerAPI(email, userName, password)
 			.then((res) => {
 				if (res) {
 					localStorage.setItem("token", res?.data.token)
 					const userObj = {
-						username: res?.data.username,
+						userName: res?.data.userName,
 						email: res?.data.email,
 					}
 					localStorage.setItem("user", JSON.stringify(userObj))
@@ -61,13 +61,14 @@ export const UserProvider = ({ children }: Props) => {
 			})
 	}
 
-	const loginUser = async (username: string, password: string) => {
-		await loginAPI(username, password)
+	const loginUser = async (userName: string, password: string) => {
+		await loginAPI(userName, password)
 			.then((res) => {
 				if (res) {
 					localStorage.setItem("token", res?.data.token)
+					console.log(res)
 					const userObj = {
-						username: res?.data.username,
+						userName: res?.data.userName,
 						email: res?.data.email,
 					}
 					localStorage.setItem("user", JSON.stringify(userObj))
@@ -91,7 +92,7 @@ export const UserProvider = ({ children }: Props) => {
 		localStorage.removeItem("user")
 		setUser(null)
 		setToken("")
-		navigate("/")
+		navigate("/login")
 	}
 
 	return (
