@@ -16,8 +16,10 @@ const router = createBrowserRouter([
 		element: (
 			<>
 				<UserProvider>
-					<App />
-					<ToastContainer />
+					<div className='overflow-y-scroll'>
+						<App />
+						<ToastContainer />
+					</div>
 				</UserProvider>
 			</>
 		),
