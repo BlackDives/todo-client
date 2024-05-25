@@ -1,3 +1,4 @@
+import { TaskModel } from "@/Models/Task"
 import axios from "axios"
 
 const api = "https://localhost:7036/api"
@@ -14,8 +15,19 @@ export const getTasks = async () => {
 	}
 }
 
-export const CreateTask = async () => {}
+export const createTask = async (data: TaskModel) => {
+	const token = localStorage.getItem("token")
+	try {
+		const response = await axios.post(`${api}/tasks`, data, {
+			headers: { Authorization: `Bearer ${token}` },
+		})
+		console.log("response.data", response.data)
+		return response.data
+	} catch (error) {
+		console.error(error)
+	}
+}
 
-export const UpdateTask = () => {}
+export const updateTask = () => {}
 
-export const DeleteTask = () => {}
+export const deleteTask = () => {}
