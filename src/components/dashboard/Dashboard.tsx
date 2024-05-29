@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { SyntheticEvent, useEffect, useState } from "react"
 import * as Yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useForm } from "react-hook-form"
@@ -11,15 +11,31 @@ import {
 	FaCirclePlus,
 } from "react-icons/fa6"
 import { useNavigate } from "react-router-dom"
-import { getTasks, createTask } from "@/Services/TaskService"
+import {
+	getTasks,
+	createTask,
+	updateTask,
+	deleteTask,
+} from "@/Services/TaskService"
 import { TaskModel } from "@/Models/Task"
+import { TaskPatch } from "@/Models/TaskPatch"
 
 type DashboardCardProps = {
+	id: number
 	title: string
 	date: string
 	priority: number
 	status: boolean
 	description: string
+	open: (
+		e,
+		id: number,
+		title: string,
+		date: string,
+		priority: number,
+		priorityMap: string,
+		description: string
+	) => void
 }
 
 type UserTask = {
@@ -74,7 +90,16 @@ export default function Dashboard() {
 	const navigate = useNavigate()
 	const [tasks, setTasks] = useState<UserTask[]>([])
 	const [open, setOpen] = useState(false)
+	const [currentTaskId, setCurrentTaskId] = useState<number | null>(null)
+	const [openExistingTask, setOpenExistingTask] = useState(true)
 	const [fetchedTasks, setFetchedTasks] = useState(false)
+	const [existingTaskName, setExistingTaskName] = useState<string>("")
+	const [existingTaskPriority, setExistingTaskPriority] = useState<string>("0")
+	const [existingTaskDescription, setExistingTaskDescription] =
+		useState<string>("")
+	const [existingTaskDate, setExistingTaskDate] = useState<string>("")
+	const [isEditMode, setIsEditMode] = useState(false)
+	const [patchDoc, setPatchDoc] = useState<TaskPatch>()
 
 	const {
 		register,
@@ -83,6 +108,14 @@ export default function Dashboard() {
 		formState: { errors },
 	} = useForm<TaskModel>({ resolver: yupResolver(validation) })
 
+	const {
+		register: registerExisting,
+		setValue,
+		getValues,
+		watch,
+		handleSubmit: handleEditSubmit,
+	} = useForm<TaskModel>()
+
 	const submitTask = (form: TaskModel) => {
 		createTask(form)
 		setOpen(false)
@@ -90,10 +123,82 @@ export default function Dashboard() {
 		reset()
 	}
 
+	const handleEditTask = () => {
+		const patchDoc = []
+		const newTaskName = getValues("taskName")
+		const newPriority = getValues("priority")
+		const newDescription = getValues("taskDescription")
+
+		if (!(newTaskName === existingTaskName)) {
+			patchDoc.push({
+				operationType: 0,
+				op: "add",
+				path: "/Name",
+				value: newTaskName,
+			})
+		}
+
+		if (!(newDescription === existingTaskDescription)) {
+			patchDoc.push({
+				operationType: 0,
+				op: "add",
+				path: "/Description",
+				value: newDescription,
+			})
+		}
+
+		if (!(mapPriority(newPriority) === existingTaskPriority)) {
+			patchDoc.push({
+				operationType: 0,
+				op: "add",
+				path: "/Priority",
+				value: newPriority,
+			})
+		}
+
+		if (patchDoc.length === 0) {
+			console.log("No changes")
+		} else {
+			console.log("Submitting: ", patchDoc)
+			updateTask(currentTaskId!, patchDoc)
+			setOpenExistingTask(false)
+			setFetchedTasks(true)
+		}
+	}
+
+	const handleDeleteTask = (currentId: number) => {
+		deleteTask(currentId)
+		setOpenExistingTask(false)
+		setFetchedTasks(true)
+	}
+
+	const openTask = (
+		e,
+		id: number,
+		title: string,
+		date: string,
+		priority: number,
+		priorityMap: string,
+		description: string
+	) => {
+		console.log(e)
+		setIsEditMode(false)
+		setCurrentTaskId(id)
+		setExistingTaskName(title)
+		setExistingTaskDate(date)
+		setExistingTaskPriority(priorityMap)
+		setExistingTaskDescription(description)
+		setOpenExistingTask(true)
+		setValue("taskName", title)
+		setValue("taskDescription", description)
+		setValue("priority", priority)
+	}
+
 	useEffect(() => {
 		if (isLoggedIn() === false) {
 			navigate("/register")
 		}
+		console.log("running useEffect")
 
 		const getData = async () => {
 			const data = await getTasks()
@@ -103,6 +208,7 @@ export default function Dashboard() {
 		getData()
 		setFetchedTasks(false)
 	}, [fetchedTasks])
+
 	return (
 		<div className='flex flex-row bg-gray-800 p-5 h-full'>
 			<div className='flex flex-col w-2/3'>
@@ -111,15 +217,6 @@ export default function Dashboard() {
 						<p className='text-3xl font-bold text-neutral-50'>All Tasks</p>
 					</div>
 					<div className='flex flex-row'>
-						<button className='bg-neutral-700 mr-3 text-neutral-50 p-2 rounded-lg'>
-							<FaSliders />
-						</button>
-						<button className='bg-neutral-700 mr-3 text-neutral-50 p-2 rounded-lg'>
-							<FaFilter />
-						</button>
-						<button className='bg-neutral-700 mr-3 text-neutral-50 p-2 rounded-lg'>
-							<FaMagnifyingGlass />
-						</button>
 						<button
 							className='bg-secondary-300 text-secondary-900 p-2 rounded-lg flex flex-row items-center'
 							onClick={() => setOpen(true)}
@@ -158,13 +255,6 @@ export default function Dashboard() {
 													""
 												)}
 											</div>
-											{/* <div className='mb-3'>
-												<p className='text-neutral-400 font-bold mb-1'>Tags</p>
-												<input
-													type='text'
-													className='w-full rounded p-1 bg-transparent border-2 border-neutral-700 text-neutral-50 focus:outline-none focus:border-primary-500'
-												/>
-											</div> */}
 											<div>
 												<p className='text-neutral-400 font-bold mb-1'>
 													Priortity
@@ -230,18 +320,14 @@ export default function Dashboard() {
 				</div>
 				<div className='border-black border-0'>
 					<div className='flex flex-row justify-between'>
-						<p className='text-2xl text-neutral-50 font-bold'>Friday, May 9</p>
-						<div className='flex flex-row justify-between items-center bg-neutral-700 rounded-lg p-2 w-1/4'>
-							<div className='mr-2 w-1/3 rounded-lg bg-neutral-500 flex flex-col items-center'>
-								<p className='text-neutral-50'>List</p>
-							</div>
-							<div className='mr-2 w-1/3 rounded flex flex-col items-center'>
-								<p className='text-neutral-50'>Board</p>
-							</div>
-							<div className='mr-2 w-1/3 rounded flex flex-col items-center'>
-								<p className='text-neutral-50'>Timeline</p>
-							</div>
-						</div>
+						<p className='text-2xl text-neutral-50 font-bold'>
+							{new Date().toLocaleDateString("en-US", {
+								weekday: "long",
+								day: "2-digit",
+								month: "long",
+							})}
+						</p>
+						{/*  */}
 					</div>
 					<div className='flex flex-col space w-full'>
 						<div className='flex flex-col w-full'>
@@ -252,11 +338,13 @@ export default function Dashboard() {
 									.map((task, index) => (
 										<div key={index} className='mb-4'>
 											<DashboardCard
+												id={task.id}
 												title={task.name}
 												date={task.createdDate}
 												priority={task.priority}
 												status={task.status}
 												description={task.description}
+												open={openTask}
 											/>
 										</div>
 									))}
@@ -265,6 +353,115 @@ export default function Dashboard() {
 					</div>
 				</div>
 			</div>
+			<Drawer
+				open={openExistingTask}
+				anchor='right'
+				onClose={() => {
+					setOpenExistingTask(false)
+					setIsEditMode(false)
+				}}
+			>
+				{isEditMode ? (
+					<form
+						className='h-full w-full'
+						onSubmit={handleEditSubmit(handleEditTask)}
+					>
+						<div className='bg-neutral-800 h-full w-full p-4 flex flex-col justify-between'>
+							<div>
+								<div className='mb-5'>
+									<p className='text-neutral-50 text-xl font-bold'>
+										Edit drawer
+									</p>
+								</div>
+								<div>
+									<div className='mb-3'>
+										<p className='text-neutral-400 font-bold mb-1'>Title</p>
+										<input
+											className='rounded w-full p-1 bg-transparent border-2 border-neutral-700 text-neutral-50 focus:outline-none focus:border-primary-500'
+											{...registerExisting("taskName")}
+										/>
+									</div>
+									<div className='mb-5'>
+										<p className='text-neutral-400 font-bold mb-1'>Priority</p>
+										<select
+											className='w-full rounded p-1 bg-transparent border-2 border-neutral-700 text-neutral-50 focus:border-primary-500'
+											{...registerExisting("priority")}
+										>
+											<option value={0}>Low</option>
+											<option value={1}>Medium</option>
+											<option value={2}>High</option>
+										</select>
+									</div>
+									<div>
+										<p className='text-neutral-400 font-bold mb-1'>
+											Description
+										</p>
+										<textarea
+											className='w-full p-2 rounded bg-transparent border-2 border-neutral-700 text-neutral-50 focus:outline-none focus:border-primary-500'
+											{...registerExisting("taskDescription")}
+										/>
+									</div>
+								</div>
+							</div>
+							<div className='flex flex-row justify-between'>
+								<button
+									className='mr-3 text-neutral-50 rounded p-2 border-2 border-neutral-700 w-[90px] font-bold'
+									onClick={() => setIsEditMode(false)}
+								>
+									Cancel
+								</button>
+								<button className='bg-primary-300 rounded p-2 text-primary-900 w-[90px] font-bold'>
+									Save
+								</button>
+							</div>
+						</div>
+					</form>
+				) : (
+					<div className='bg-neutral-800 h-full w-full p-4 flex flex-col justify-between'>
+						<div>
+							<div className='mb-6'>
+								<p className='text-neutral-50 text-xl font-bold'>
+									{existingTaskName}
+								</p>
+							</div>
+							<div>
+								<div className='flex flex-row'>
+									<p className='text-neutral-400 font-bold text-lg w-1/5'>
+										Priority
+									</p>
+									<p className='text-neutral-50'>{existingTaskPriority}</p>
+								</div>
+								<div className='flex flex-row mb-6'>
+									<p className='text-neutral-400 font-bold text-lg w-1/5'>
+										Start
+									</p>
+									<p className='text-neutral-50'>{existingTaskDate}</p>
+								</div>
+								<div className='flex flex-col'>
+									<p className='text-neutral-400 font-bold text-lg mb-2'>
+										Description
+									</p>
+									<p className='text-neutral-50'>{existingTaskDescription}</p>
+								</div>
+							</div>
+						</div>
+						<div className='flex flex-row justify-between'>
+							<button
+								className='bg-secondary-300 text-secondary-900 rounded p-2 w-[90px] font-bold'
+								onClick={() => handleDeleteTask(currentTaskId!)}
+							>
+								Delete
+							</button>
+							<button
+								className='bg-primary-300 text-primary-900 rounded p-2 w-[90px] font-bold'
+								onClick={() => setIsEditMode(true)}
+							>
+								Edit
+							</button>
+						</div>
+					</div>
+				)}
+			</Drawer>
 		</div>
 	)
 }
@@ -272,36 +469,25 @@ export default function Dashboard() {
 export const DashboardCard: React.FC<DashboardCardProps> = (
 	props: DashboardCardProps
 ) => {
-	const { title, date, priority, description, status } = props
+	const { id, title, date, priority, description, status, open } = props
 
 	const priorityMap = mapPriority(priority)
 	const readableDate = formatReadableDate(date)
 	return (
-		<div className='bg-neutral-700 h-[200px] rounded-xl mt-8'>
+		<div
+			className='bg-neutral-700 h-[200px] rounded-xl mt-8'
+			onClick={(e) =>
+				open(e, id, title, readableDate, priority, priorityMap, description)
+			}
+		>
 			<div className='h-full flex flex-row'>
 				<div className='h-full w-[30px] bg-secondary-400 rounded-l-lg' />
 				<div className='ml-2 flex flex-row p-2'>
-					<div className='flex flex-col justify-start'>
-						<div className='flex flex-col items-center'>
-							<input
-								className='border-neutral-500 bg-neutral-900'
-								type='checkbox'
-							/>
-						</div>
-					</div>
 					<div className='flex flex-col justify-start'>
 						<p className='text-2xl text-neutral-100 font-bold'>{title}</p>
 						<p className='text-neutral-500'>
 							{readableDate} - {priorityMap} Priority
 						</p>
-						<div className='flex flex-row mt-2'>
-							<p className='bg-neutral-600 text-neutral-50 mr-2 px-2 rounded-lg'>
-								label
-							</p>
-							<p className='bg-neutral-600 text-neutral-50 px-2 rounded-lg'>
-								label
-							</p>
-						</div>
 						<div className='mt-2'>
 							<p className='text-neutral-50'>{description}</p>
 						</div>
